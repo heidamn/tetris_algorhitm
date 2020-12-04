@@ -30,25 +30,33 @@ def turn(gcb: Board) -> TetrisAction:
     board = remove_figure_from_board(figure_type, figure_point, board)
     #создаем все возможные варианты установки фигуры
     boards = predict_landing(figure_type, figure_point, board)
-    
-
     """
-    print("possible_boards[0]",possible_boards[0][:2], "\n", possible_boards[0][2])
-    print("possible_boards[10]",possible_boards[10][:2],"\n", possible_boards[10][2])
-    print("possible_boards[11]",possible_boards[11][:2],"\n", possible_boards[11][2])
-    print("possible_boards[12]",possible_boards[12][:2],"\n", possible_boards[12][2])
-    print("possible_boards[13]",possible_boards[13][:2],"\n", possible_boards[13][2])
+    print("boards[0]",boards[-1][:2], "\n", boards[0][2])
+    print("boards[10]",boards[-10][:2],"\n", boards[10][2])
+    print("boards[11]",boards[-11][:2],"\n", boards[11][2])
+    print("boards[12]",boards[-12][:2],"\n", boards[12][2])
+    print("boards[13]",boards[-13][:2],"\n", boards[13][2])
     """
-    
 
     #выбираем лучшую комбинацию
     perimeters = []
-    heights = [] # TODO
+    heights = []
     for board in boards:
-        perimeters.append(find_perimeter(board[2]))
+        heights.append(get_height(board[2]))
 
-    min_perimetre_i = perimeters.index(min(perimeters))
-    action_numbers = boards[min_perimetre_i][0:2]
+    print(heights)
+    min_height_is = []
+    min_height = min(heights)
+    print(min_height)
+    for i, height in enumerate(heights):
+        if height == min_height:
+            min_height_is.append(i)
+    print(min_height_is)
+
+
+
+    
+    action_numbers = boards[heights.index(min_height)][0:2]
     return create_actions_list(action_numbers)
             
      # это те действия, которые выполнятся на игровом сервере в качестве вашего хода
@@ -96,7 +104,7 @@ def predict_positions(figure_type, figure_point):
         position.sort(key=lambda x: x[0])
         position_to_right = copy.deepcopy(position)
         offset = 0
-        positions.append([offset, rotation, position]) # middle position
+        positions.append([offset, rotation, copy.deepcopy(position)]) # middle position
         while position[0][0] != 0:
             offset -= 1
             for point in position:
@@ -107,7 +115,7 @@ def predict_positions(figure_type, figure_point):
             offset += 1
             for point in position_to_right:
                 point[0] += 1   
-            positions.append([offset, rotation, position_to_right]) # move to left positions
+            positions.append([offset, rotation, copy.deepcopy(position_to_right)]) # move to left positions
     for position in positions:
         need_to_move_down = 0
         for point in position[2]:
@@ -115,7 +123,6 @@ def predict_positions(figure_type, figure_point):
         if need_to_move_down != 0:
             for point in position[2]:
                 point[1] -= need_to_move_down
-
     return positions   
 
 
@@ -155,7 +162,8 @@ def remove_figure_from_board(figure_type, figure_point, board):
 
 # высота фигур на поле
 def get_height(board):
-    return board.index(['.' for _ in range(18)])
+    return 18 - board.count(['.' for _ in range(18)])
+
 
 
 # поиск дыр
@@ -168,7 +176,7 @@ def create_actions_list(action_numbers):
     actions = []
     command = TetrisAction.RIGHT
     if action_numbers[0] < 0:
-        action_numbers[0] *= -1
+        action_numbers[0] = -action_numbers[0]
         command = TetrisAction.LEFT
 
     for _ in range(action_numbers[0]):
