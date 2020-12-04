@@ -21,22 +21,46 @@ rotations_nedeed = {
 }
 
 def turn(gcb: Board) -> TetrisAction:
-   
-    print(gcb.get_current_figure_type())
-    print(gcb.get_current_figure_point())
+    #информация о фигуре
+    figure_type = gcb.get_current_figure_type()
+    figure_point = gcb.get_current_figure_point()
+    #создаем игрвое поле
+    board = format_board(gcb)
+    #убираем новую фигуру с поля
+    board = remove_figure_from_board(figure_type, figure_point, board)
+    #создаем все возможные варианты установки фигуры
+    boards = predict_landing(figure_type, figure_point, board)
     
+
+    """
+    print("possible_boards[0]",possible_boards[0][:2], "\n", possible_boards[0][2])
+    print("possible_boards[10]",possible_boards[10][:2],"\n", possible_boards[10][2])
+    print("possible_boards[11]",possible_boards[11][:2],"\n", possible_boards[11][2])
+    print("possible_boards[12]",possible_boards[12][:2],"\n", possible_boards[12][2])
+    print("possible_boards[13]",possible_boards[13][:2],"\n", possible_boards[13][2])
+    """
+    
+
+    #выбираем лучшую комбинацию
+    perimeters = []
+    heights = [] # TODO
+    for board in boards:
+        perimeters.append(find_perimeter(board[2]))
+
+    min_perimetre_i = perimeters.index(min(perimeters))
+    action_numbers = boards[min_perimetre_i][0:2]
+    return create_actions_list(action_numbers)
+            
+     # это те действия, которые выполнятся на игровом сервере в качестве вашего хода
+
+#создание массива игрового поля 
+def format_board(gcb):
     board = gcb._line_by_line().split('\n')
     for i, line in enumerate(board):
         board[i] = list(line)
     board.reverse()
-    print(remove_figure_from_board(gcb.get_current_figure_type(), gcb.get_current_figure_point(), board))
+    return board
 
-
-    
-    actions = [x for x in TetrisAction if x.value != "act(0,0)"]
-    return [TetrisAction.DOWN]
-            
-     # это те действия, которые выполнятся на игровом сервере в качестве вашего хода
 
 #нужна для find_perimeter
 def count_sides(x, y, board):
@@ -50,6 +74,7 @@ def count_sides(x, y, board):
         else:
             sides+=1
     return sides
+
 
 #находит периметр фигур на поле
 def find_perimeter(board):
@@ -69,14 +94,15 @@ def predict_positions(figure_type, figure_point):
     for rotation in rotations:
         position = [[point.get_x(), point.get_y()] for point in figure.get_all_coords_after_rotation(figure_point, rotation=rotation)]
         position.sort(key=lambda x: x[0])
-        position_to_right = position
-        offset = 0;
+        position_to_right = copy.deepcopy(position)
+        offset = 0
         positions.append([offset, rotation, position]) # middle position
         while position[0][0] != 0:
             offset -= 1
             for point in position:
                 point[0] -= 1
-            positions.append([offset, rotation, position]) # move to left positions
+            positions.append([offset, rotation, copy.deepcopy(position)]) # move to left positions
+        offset = 0
         while position_to_right[-1][0] != 17:
             offset += 1
             for point in position_to_right:
@@ -90,7 +116,7 @@ def predict_positions(figure_type, figure_point):
             for point in position[2]:
                 point[1] -= need_to_move_down
 
-    return sorted(positions, key=lambda x: x[0]);   
+    return positions   
 
 
 # все варианты падения фигуры
@@ -113,8 +139,9 @@ def predict_landing(figure_type, figure_point, board):
         new_board = copy.deepcopy(board)
         for point in position[2]:
             new_board[point[1]][point[0]] = figure_type
-        boards.append(new_board)
+        boards.append([position[0], position[1], new_board])
     return boards
+
 
 # удаление фигуры с поля (нужно для упрощения дальнейшей обработки)
 def remove_figure_from_board(figure_type, figure_point, board):
@@ -125,13 +152,36 @@ def remove_figure_from_board(figure_type, figure_point, board):
             board[point[1]][point[0]] = '.'
     return board
 
+
 # высота фигур на поле
 def get_height(board):
     return board.index(['.' for _ in range(18)])
 
+
 # поиск дыр
 def count_holes(board):
     pass
+
+
+#составление списка команд
+def create_actions_list(action_numbers):
+    actions = []
+    command = TetrisAction.RIGHT
+    if action_numbers[0] < 0:
+        action_numbers[0] *= -1
+        command = TetrisAction.LEFT
+
+    for _ in range(action_numbers[0]):
+        actions.append(command)
+
+    if action_numbers[1] == 1:
+        actions.append(TetrisAction.ACT)
+    elif action_numbers[1] == 2:
+        actions.append(TetrisAction.ACT_2)
+    elif action_numbers[1] == 3:
+        actions.append(TetrisAction.ACT_3)
+    actions.append(TetrisAction.DOWN)
+    return actions
 
 def main(uri: Text):
     """
