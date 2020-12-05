@@ -42,6 +42,7 @@ def turn(gcb: Board) -> TetrisAction:
     perimeters = []
     heights = []
     for board in boards:
+        perimeters.append(find_perimeter(board[2]))
         heights.append(get_height(board[2]))
 
     print(heights)
@@ -53,10 +54,16 @@ def turn(gcb: Board) -> TetrisAction:
             min_height_is.append(i)
     print(min_height_is)
 
+    min_perimeter = perimeters[min_height_is[0]]
+    min_perimeter_i = min_height_is[0]
+    for i in min_height_is:
+        if perimeters[i] < min_perimeter:
+            min_perimeter = perimeters[i]
+            min_perimeter_i = i
 
 
     
-    action_numbers = boards[heights.index(min_height)][0:2]
+    action_numbers = boards[min_perimeter_i][0:2]
     return create_actions_list(action_numbers)
             
      # это те действия, которые выполнятся на игровом сервере в качестве вашего хода
