@@ -49,7 +49,8 @@ def turn(gcb: Board) -> TetrisAction:
         heights.append(get_height(boar[2]))
         holes.append(count_holes(boar[2]))
 
-
+    print(board)
+    print(calculate_height(board))
     board_with_no_holes_is = []
     for i, hole in enumerate(holes):
         if not hole:
@@ -186,6 +187,12 @@ def remove_figure_from_board(figure_type, figure_point, board):
 # высота фигур на поле
 def get_height(board):
     return 18 - board.count(['.' for _ in range(18)])
+
+def calculate_height(board):
+    summ = 0
+    for i, line in enumerate(board):
+        summ+= i*(18-line.count('.'))
+    return summ
 
 # поиск дыр
 def count_holes(board):
