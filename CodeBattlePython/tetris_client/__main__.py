@@ -39,48 +39,44 @@ def turn(gcb: Board) -> TetrisAction:
     print("boards[12]",boards[-12][:2],"\n", boards[12][2])
     print("boards[13]",boards[-13][:2],"\n", boards[13][2])
     """
-
+    #board info:
+    #0 - move (left/right)
+    #1 - turn
+    #2 - board list
+    #3 - perimeter
+    #4 - height weight
+    #5 - number of holes
     #выбираем лучшую комбинацию
-    perimeters = []
-    heights = []
-    holes = []
+
     for boar in boards:
-        perimeters.append(find_perimeter(boar[2]))
-        heights.append(get_height(boar[2]))
-        holes.append(count_holes(boar[2]))
+        boar.append(find_perimeter(boar[2]))
+        boar.append(calculate_height(boar[2]))
+        boar.append(count_holes(boar[2]))
 
-    print(board)
-    print(calculate_height(board))
-    board_with_no_holes_is = []
-    for i, hole in enumerate(holes):
-        if not hole:
-            board_with_no_holes_is.append(i)
-    if board_with_no_holes_is.count(True) == 0:
-        board_with_no_holes_is = [i for i in range(len(holes))]
+    current_holes_number = count_holes(board)
+    #обработка дыр
+    boards_to_remove = []
+    for i, boar in enumerate(boards):
+        if boar[5] > current_holes_number:
+            boards_to_remove.append(i)
 
-    min_height_is = [board_with_no_holes_is[0]]
-    
-    min_height = heights[board_with_no_holes_is[0]]
-    
-    for i in board_with_no_holes_is:
-        if heights[i] < min_height:
-            min_height = heights[i]
-            min_height_is.clear()
-        if heights[i] <= min_height:
-            min_height_is.append(i)
-    
+    if len(boards_to_remove) == len(boards):
+        print("\n\nНЕВОЗМОЖНО СЫГРАТЬ БЕЗ УВЕЛИЧЕНИЯ ЧИСЛА ДЫР\n\n")
+    else:
+        boards_to_remove.reverse()    
+        for i in boards_to_remove:
+            boards.pop(i)
 
-    min_perimeter = perimeters[min_height_is[0]]
-    min_perimeter_i = min_height_is[0]
-    for i in min_height_is:
-        if perimeters[i] < min_perimeter:
-            min_perimeter = perimeters[i]
-            min_perimeter_i = i
+    min_weight = boards[0][4]
+    min_weight_i = 0
+    for i, boar in enumerate(boards):
+        if boar[4] < min_weight:
+            min_weight_i = i
+            min_weight = boar[4]
+
+    action_numbers = boards[min_weight_i][0:2]
 
 
-    print(figure_type)
-    action_numbers = boards[min_perimeter_i][0:2]
-    last_action = action_numbers
     return create_actions_list(action_numbers)
     #return [ TetrisAction.ACT_2, TetrisAction.DOWN]       
      # это те действия, которые выполнятся на игровом сервере в качестве вашего хода
@@ -191,24 +187,24 @@ def get_height(board):
 def calculate_height(board):
     summ = 0
     for i, line in enumerate(board):
-        summ+= i*(18-line.count('.'))
+        summ+= (i+1)*(18-line.count('.'))
     return summ
 
 # поиск дыр
 def count_holes(board):
     i = 0;
-    hole = False
+    holes = 0
     for i in range(18):
-        were_empty = False
+        potential_holes = 0
         col = [line[i] for line in board]
         for el in col:
             if el == '.':
-                were_empty = True
-            elif were_empty:
-                hole = True
-        if hole:
-            return True
-    return False
+                potential_holes += 1
+            else:
+                holes += potential_holes
+    return holes
+                
+
 
 
 #составление списка команд
