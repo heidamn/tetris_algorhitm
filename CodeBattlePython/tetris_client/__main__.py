@@ -20,6 +20,7 @@ rotations_nedeed = {
     "T": [0, 1, 2, 3],
 }
 
+last_action = False
 def turn(gcb: Board) -> TetrisAction:
     #информация о фигуре
     figure_type = gcb.get_current_figure_type()
@@ -27,9 +28,10 @@ def turn(gcb: Board) -> TetrisAction:
     #создаем игрвое поле
     board = format_board(gcb)
     #убираем новую фигуру с поля
-    board = remove_figure_from_board(figure_type, figure_point, board)
+    board = remove_figure_from_board(figure_type, figure_point, copy.deepcopy(board))
     #создаем все возможные варианты установки фигуры
-    boards = predict_landing(figure_type, figure_point, board)
+    new_board = copy.deepcopy(board)
+    boards = predict_landing(figure_type, figure_point, new_board)
     """
     print("boards[0]",boards[-1][:2], "\n", boards[0][2])
     print("boards[10]",boards[-10][:2],"\n", boards[10][2])
@@ -42,17 +44,28 @@ def turn(gcb: Board) -> TetrisAction:
     perimeters = []
     heights = []
     holes = []
-    for board in boards:
-        perimeters.append(find_perimeter(board[2]))
-        heights.append(get_height(board[2]))
-        holes.append(count_holes(board[2]))
+    for boar in boards:
+        perimeters.append(find_perimeter(boar[2]))
+        heights.append(get_height(boar[2]))
+        holes.append(count_holes(boar[2]))
 
+
+    board_with_no_holes_is = []
+    for i, hole in enumerate(holes):
+        if not hole:
+            board_with_no_holes_is.append(i)
+    if board_with_no_holes_is.count(True) == 0:
+        board_with_no_holes_is = [i for i in range(len(holes))]
+
+    min_height_is = [board_with_no_holes_is[0]]
     
-    min_height_is = []
-    min_height = min(heights)
+    min_height = heights[board_with_no_holes_is[0]]
     
-    for i, height in enumerate(heights):
-        if height == min_height and holes[i] == False:
+    for i in board_with_no_holes_is:
+        if heights[i] < min_height:
+            min_height = heights[i]
+            min_height_is.clear()
+        if heights[i] <= min_height:
             min_height_is.append(i)
     
 
@@ -64,10 +77,11 @@ def turn(gcb: Board) -> TetrisAction:
             min_perimeter_i = i
 
 
-    
+    print(figure_type)
     action_numbers = boards[min_perimeter_i][0:2]
+    last_action = action_numbers
     return create_actions_list(action_numbers)
-            
+    #return [ TetrisAction.ACT_2, TetrisAction.DOWN]       
      # это те действия, которые выполнятся на игровом сервере в качестве вашего хода
 
 #создание массива игрового поля 
@@ -193,6 +207,12 @@ def count_holes(board):
 #составление списка команд
 def create_actions_list(action_numbers):
     actions = []
+    if action_numbers[1] == 1:
+        actions.append(TetrisAction.ACT)
+    elif action_numbers[1] == 2:
+        actions.append(TetrisAction.ACT_2)
+    elif action_numbers[1] == 3:
+        actions.append(TetrisAction.ACT_3)
     command = TetrisAction.RIGHT
     if action_numbers[0] < 0:
         action_numbers[0] = -action_numbers[0]
@@ -200,14 +220,8 @@ def create_actions_list(action_numbers):
 
     for _ in range(action_numbers[0]):
         actions.append(command)
-
-    if action_numbers[1] == 1:
-        actions.append(TetrisAction.ACT)
-    elif action_numbers[1] == 2:
-        actions.append(TetrisAction.ACT_2)
-    elif action_numbers[1] == 3:
-        actions.append(TetrisAction.ACT_3)
     actions.append(TetrisAction.DOWN)
+    print(actions, action_numbers)
     return actions
 
 def main(uri: Text):
