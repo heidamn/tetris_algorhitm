@@ -6,6 +6,8 @@ from tetris_client import TetrisAction
 from tetris_client import Board
 from tetris_client import Element
 import copy
+import datetime
+
 
 logging.basicConfig(format="%(asctime)s %(levelname)s:%(message)s", level=logging.INFO)
 
@@ -22,8 +24,29 @@ rotations_nedeed = {
 
 
 def turn(gcb: Board) -> TetrisAction:
+    start_time = datetime.datetime.now()
+    test_board = [
+    ['O', '.', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O'],
+    ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O'],
+    ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O'],
+    ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O'],
+    ['O', '.', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O'],
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
+    ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.']]
+
+    print("count_holes(test_board)", count_holes(test_board))
     #информация о фигуре
- 
     figure_type = gcb.get_current_figure_type()
     figure_point = gcb.get_current_figure_point()
     #создаем игрвое поле
@@ -85,7 +108,8 @@ def turn(gcb: Board) -> TetrisAction:
 
     action_numbers = boards[min_weight_i][0:2]
 
-
+    finish_time = datetime.datetime.now()
+    print("\n\n", "TIME =", finish_time - start_time ,"\n\n")
     return create_actions_list(action_numbers)
     #return [ TetrisAction.ACT_2, TetrisAction.DOWN]       
      # это те действия, которые выполнятся на игровом сервере в качестве вашего хода
@@ -211,8 +235,6 @@ def get_agressive_height(board):
         cols.append(18 - [line[x] for line in board].count('.'))
     return min(cols)
 
-
-
 def calculate_height(board):
     summ = 0
     for i, line in enumerate(board):
@@ -231,6 +253,7 @@ def count_holes(board):
                 potential_holes += 1
             elif board[y].count('.') != 0:
                 holes += potential_holes
+                potential_holes = 0
     return holes
                 
 
