@@ -20,9 +20,10 @@ rotations_nedeed = {
     "T": [0, 1, 2, 3],
 }
 
-last_action = False
+
 def turn(gcb: Board) -> TetrisAction:
     #информация о фигуре
+ 
     figure_type = gcb.get_current_figure_type()
     figure_point = gcb.get_current_figure_point()
     #создаем игрвое поле
@@ -30,8 +31,15 @@ def turn(gcb: Board) -> TetrisAction:
     #убираем новую фигуру с поля
     board = remove_figure_from_board(figure_type, figure_point, copy.deepcopy(board))
     #создаем все возможные варианты установки фигуры
+    agressive_mode = True  
+    if  get_height(board)>8:
+        agressive_mode = False
+    if [line[17] for line in board].count('.') != 18:
+        agressive_mode = False
+
     new_board = copy.deepcopy(board)
-    boards = predict_landing(figure_type, figure_point, new_board)
+
+    boards = predict_landing(figure_type, figure_point, new_board, agressive_mode)
     """
     print("boards[0]",boards[-1][:2], "\n", boards[0][2])
     print("boards[10]",boards[-10][:2],"\n", boards[10][2])
@@ -47,6 +55,7 @@ def turn(gcb: Board) -> TetrisAction:
     #4 - height weight
     #5 - number of holes
     #выбираем лучшую комбинацию
+
 
     for boar in boards:
         boar.append(find_perimeter(boar[2]))
@@ -66,7 +75,7 @@ def turn(gcb: Board) -> TetrisAction:
         boards_to_remove.reverse()    
         for i in boards_to_remove:
             boards.pop(i)
-
+    # обработка веса       
     min_weight = boards[0][4]
     min_weight_i = 0
     for i, boar in enumerate(boards):
@@ -115,27 +124,38 @@ def find_perimeter(board):
 
 
 #находит все возможные варианты нахождения фигуры
-def predict_positions(figure_type, figure_point):
+def predict_positions(figure_type, figure_point, board, agressive_mode):
     positions = []
-    rotations = rotations_nedeed.get(figure_type)
-    figure = Element(figure_type)
-    for rotation in rotations:
-        position = [[point.get_x(), point.get_y()] for point in figure.get_all_coords_after_rotation(figure_point, rotation=rotation)]
-        position.sort(key=lambda x: x[0])
-        position_to_right = copy.deepcopy(position)
-        offset = 0
-        positions.append([offset, rotation, copy.deepcopy(position)]) # middle position
-        while position[0][0] != 0:
-            offset -= 1
-            for point in position:
-                point[0] -= 1
-            positions.append([offset, rotation, copy.deepcopy(position)]) # move to left positions
-        offset = 0
-        while position_to_right[-1][0] != 17:
-            offset += 1
-            for point in position_to_right:
-                point[0] += 1   
-            positions.append([offset, rotation, copy.deepcopy(position_to_right)]) # move to left positions
+    if figure_type == "I" and agressive_mode and get_agressive_height(board)>=4:
+        figure = Element(figure_type)
+        position = [[point.get_x(), point.get_y()] for point in figure.get_all_coords_after_rotation(figure_point, rotation=0)]
+        for point in position:
+            point[0] = 17
+        positions.append([9, 0, position])
+    else:
+        if agressive_mode:
+            right_border = 16
+        else:
+            right_border = 17
+        rotations = rotations_nedeed.get(figure_type)
+        figure = Element(figure_type)
+        for rotation in rotations:
+            position = [[point.get_x(), point.get_y()] for point in figure.get_all_coords_after_rotation(figure_point, rotation=rotation)]
+            position.sort(key=lambda x: x[0])
+            position_to_right = copy.deepcopy(position)
+            offset = 0
+            positions.append([offset, rotation, copy.deepcopy(position)]) # middle position
+            while position[0][0] != 0:
+                offset -= 1
+                for point in position:
+                    point[0] -= 1
+                positions.append([offset, rotation, copy.deepcopy(position)]) # move to left positions
+            offset = 0
+            while position_to_right[-1][0] != right_border:
+                offset += 1
+                for point in position_to_right:
+                    point[0] += 1   
+                positions.append([offset, rotation, copy.deepcopy(position_to_right)]) # move to left positions
     for position in positions:
         need_to_move_down = 0
         for point in position[2]:
@@ -147,8 +167,8 @@ def predict_positions(figure_type, figure_point):
 
 
 # все варианты падения фигуры
-def predict_landing(figure_type, figure_point, board):
-    positions = predict_positions(figure_type, figure_point)
+def predict_landing(figure_type, figure_point, board, agressive_mode):
+    positions = predict_positions(figure_type, figure_point, board, agressive_mode)
     boards = []
     for position in positions:
         collapse = False
@@ -184,6 +204,15 @@ def remove_figure_from_board(figure_type, figure_point, board):
 def get_height(board):
     return 18 - board.count(['.' for _ in range(18)])
 
+#мин высота столбца для
+def get_agressive_height(board):
+    cols = []
+    for x in range(17):
+        cols.append(18 - [line[x] for line in board].count('.'))
+    return min(cols)
+
+
+
 def calculate_height(board):
     summ = 0
     for i, line in enumerate(board):
@@ -194,13 +223,13 @@ def calculate_height(board):
 def count_holes(board):
     i = 0;
     holes = 0
-    for i in range(18):
+    for x in range(18):
         potential_holes = 0
-        col = [line[i] for line in board]
-        for el in col:
+        col = [line[x] for line in board]
+        for y, el in enumerate(col):
             if el == '.':
                 potential_holes += 1
-            else:
+            elif board[y].count('.') != 0:
                 holes += potential_holes
     return holes
                 
