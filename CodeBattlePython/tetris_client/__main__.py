@@ -41,18 +41,20 @@ def turn(gcb: Board) -> TetrisAction:
     #выбираем лучшую комбинацию
     perimeters = []
     heights = []
+    holes = []
     for board in boards:
         perimeters.append(find_perimeter(board[2]))
         heights.append(get_height(board[2]))
+        holes.append(count_holes(board[2]))
 
-    print(heights)
+    
     min_height_is = []
     min_height = min(heights)
-    print(min_height)
+    
     for i, height in enumerate(heights):
-        if height == min_height:
+        if height == min_height and holes[i] == False:
             min_height_is.append(i)
-    print(min_height_is)
+    
 
     min_perimeter = perimeters[min_height_is[0]]
     min_perimeter_i = min_height_is[0]
@@ -171,11 +173,21 @@ def remove_figure_from_board(figure_type, figure_point, board):
 def get_height(board):
     return 18 - board.count(['.' for _ in range(18)])
 
-
-
 # поиск дыр
 def count_holes(board):
-    pass
+    i = 0;
+    hole = False
+    for i in range(18):
+        were_empty = False
+        col = [line[i] for line in board]
+        for el in col:
+            if el == '.':
+                were_empty = True
+            elif were_empty:
+                hole = True
+        if hole:
+            return True
+    return False
 
 
 #составление списка команд
