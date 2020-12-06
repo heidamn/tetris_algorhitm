@@ -1,10 +1,10 @@
 #include <iostream>
 #include <random>
 
-#include "GameClientTetris.h"
-#include "CommandBuilder.h"
+#include "../CodeBattleCppLibrary/GameClientTetris.h"
+#include "../CodeBattleCppLibrary/CommandBuilder.h"
 
-void main()
+int main()
 {
 	srand(time(0));
 
@@ -14,6 +14,11 @@ void main()
 			//write down code here
 			GameBoard* gb = gcb->get_GameBoard();
 			GlassBoard* glassBoard = gb->getGlassBoard();
+			LevelProgress* lp = gb->getLevelProgress();
+			std::cout << "currentLevel: " << lp->getCurrentLevel() << "\n";
+			std::cout << "lastPassedLevel: " << lp->getLastPassedLevel() << "\n";
+			std::cout << "maxLevel: " << lp->getMaxLevel() << "\n";
+			std::cout << "currentFigurePoints START" << "\n";
 			CommandBuilder builder;
 			builder.addCommand(Command::LEFT);
 			builder.addCommand(Command::LEFT);

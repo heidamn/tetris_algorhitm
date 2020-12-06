@@ -2,7 +2,7 @@
 
 #include <string>
 #include <thread>
-#include "easywsclient\easywsclient.hpp"
+#include "easywsclient/easywsclient.hpp"
 #ifdef _WIN32
 #pragma comment( lib, "ws2_32" )
 #include <WinSock2.h>
@@ -19,12 +19,14 @@
 #include "Element.h"
 #include "GameBoard.h"
 #include "GlassBoard.h"
+#include "LevelProgress.h"
 
 class GameClientTetris
 {
 	Element**map;
 	GameBoard *board;
 	GlassBoard* glassBoard;
+	LevelProgress* levelProgress;
 	uint32_t map_size, player_x, player_y;
 
 

@@ -22,33 +22,40 @@ package com.codenjoy.dojo.tetris.client;
  * #L%
  */
 
-
-import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.client.AbstractTextBoard;
 import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.services.Command;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Point;
 import org.junit.Before;
 import org.junit.Test;
 
 import static com.codenjoy.dojo.services.PointImpl.pt;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SolverTest {
 
     private Dice dice;
-    private Solver ai;
+    private Solver<AbstractTextBoard> ai;
 
     @Before
     public void setup() {
         dice = mock(Dice.class);
+        when(dice.next(anyInt())).thenReturn(1);
         ai = new YourSolver(dice);
     }
 
     @Test
     public void should() {
+        List<Command> expected = new ArrayList<>();
+        expected.add(Command.LEFT);
+        expected.add(Command.RIGHT);
+        expected.add(Command.ROTATE_CLOCKWISE_180);
         asertAI("......." +
                 "......I" +
                 "..LL..I" +
@@ -58,19 +65,15 @@ public class SolverTest {
                 "..OOIOO",
                 "T",
                 pt(1, 2),
-                new String[] {"I", "O", "L", "Z"},
-                Direction.DOWN);
+                new String[] { "I", "O", "L", "Z" },
+                expected);
     }
 
     private void asertAI(String glass, String figureType,
-                         Point point, String[] futureFigures,
-                         Direction expected)
-    {
+            Point point, String[] futureFigures,
+            List<Command> expected) {
         String actual = ai.get(BoardTest.getBoard(glass, figureType, point, futureFigures));
-        assertEquals(expected.toString(), actual);
+        assertEquals(String.join(", ", expected.stream().map(Object::toString).collect(toList())), actual);
     }
 
-    private void dice(Direction direction) {
-        when(dice.next(anyInt())).thenReturn(direction.value());
-    }
 }
