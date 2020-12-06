@@ -45,7 +45,6 @@ def turn(gcb: Board) -> TetrisAction:
     ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'], 
     ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.']]
 
-    print("count_holes(test_board)", count_holes(test_board))
     #информация о фигуре
     figure_type = gcb.get_current_figure_type()
     figure_point = gcb.get_current_figure_point()
@@ -55,21 +54,27 @@ def turn(gcb: Board) -> TetrisAction:
     board = remove_figure_from_board(figure_type, figure_point, copy.deepcopy(board))
     #создаем все возможные варианты установки фигуры
     agressive_mode = True  
-    if  get_height(board)>8:
-        agressive_mode = False
-    if [line[17] for line in board].count('.') != 18:
+    print("\n\n\n", gcb.get_level()._current, "\n\n\n")
+    level = gcb.get_level()
+    if get_height(board) >= 15 or (level._current == 1 and level._total != 1):
         agressive_mode = False
 
     new_board = copy.deepcopy(board)
 
     boards = predict_landing(figure_type, figure_point, new_board, agressive_mode)
-    """
-    print("boards[0]",boards[-1][:2], "\n", boards[0][2])
-    print("boards[10]",boards[-10][:2],"\n", boards[10][2])
-    print("boards[11]",boards[-11][:2],"\n", boards[11][2])
-    print("boards[12]",boards[-12][:2],"\n", boards[12][2])
-    print("boards[13]",boards[-13][:2],"\n", boards[13][2])
-    """
+
+
+    if board == [['.' for i in range(18)] for j in range(18)]:
+        print("""
+
+██████╗  ██████╗ ████████╗██████╗  █████╗  ██████╗██╗  ██╗███████╗███╗   ██╗ ██████╗ 
+██╔══██╗██╔═══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██║  ██║██╔════╝████╗  ██║██╔═══██╗
+██████╔╝██║   ██║   ██║   ██████╔╝███████║██║     ███████║█████╗  ██╔██╗ ██║██║   ██║
+██╔═══╝ ██║   ██║   ██║   ██╔══██╗██╔══██║██║     ██╔══██║██╔══╝  ██║╚██╗██║██║   ██║
+██║     ╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗██║  ██║███████╗██║ ╚████║╚██████╔╝
+╚═╝      ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝ ╚═════╝
+
+            """)
     #board info:
     #0 - move (left/right)
     #1 - turn
@@ -99,12 +104,12 @@ def turn(gcb: Board) -> TetrisAction:
         for i in boards_to_remove:
             boards.pop(i)
     # обработка веса       
-    min_weight = boards[0][4]
+    min_weight = boards[0][4]+boards[0][3]*2
     min_weight_i = 0
     for i, boar in enumerate(boards):
-        if boar[4] < min_weight:
+        if boar[4]+boar[3]*2 < min_weight:
             min_weight_i = i
-            min_weight = boar[4]
+            min_weight = boar[4]+boar[3]*2
 
     action_numbers = boards[min_weight_i][0:2]
 
@@ -132,8 +137,7 @@ def count_sides(x, y, board):
         if 0 <= x_n < 18 and 0 <= y_n < 18:
             if board[y_n][x_n] == '.':
                 sides+=1
-        else:
-            sides+=1
+        
     return sides
 
 
@@ -187,7 +191,7 @@ def predict_positions(figure_type, figure_point, board, agressive_mode):
         if need_to_move_down != 0:
             for point in position[2]:
                 point[1] -= need_to_move_down
-    return positions   
+    return sorted(positions, key=lambda x: x[0]) 
 
 
 # все варианты падения фигуры
@@ -233,12 +237,14 @@ def get_agressive_height(board):
     cols = []
     for x in range(17):
         cols.append(18 - [line[x] for line in board].count('.'))
-    return min(cols)
+    return min(cols)-(18 - [line[17] for line in board].count('.')) 
 
 def calculate_height(board):
     summ = 0
-    for i, line in enumerate(board):
-        summ+= (i+1)*(18-line.count('.'))
+    for y, line in enumerate(board):
+        for x, el in enumerate(line):
+            if el != '.':
+                summ += y
     return summ
 
 # поиск дыр
@@ -257,6 +263,12 @@ def count_holes(board):
     return holes
                 
 
+def count_full_lines(board):
+    counter = 0
+    for line in board:
+        if line.count('.') == 0:
+            counter+=1
+    return counter
 
 
 #составление списка команд
@@ -276,7 +288,6 @@ def create_actions_list(action_numbers):
     for _ in range(action_numbers[0]):
         actions.append(command)
     actions.append(TetrisAction.DOWN)
-    print(actions, action_numbers)
     return actions
 
 def main(uri: Text):
