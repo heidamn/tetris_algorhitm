@@ -52,13 +52,15 @@ def turn(gcb: Board) -> TetrisAction:
     board = format_board(gcb)
     #убираем новую фигуру с поля
     board = remove_figure_from_board(figure_type, figure_point, copy.deepcopy(board))
-    #создаем все возможные варианты установки фигуры
+    
+    #решаем, каким будет режим игры
     agressive_mode = True  
     print("\n\n\n", gcb.get_level()._current, "\n\n\n")
     level = gcb.get_level()
     if get_height(board) >= 15 or (level._current == 1 and level._total != 1):
         agressive_mode = False
 
+    #создаем все возможные варианты установки фигуры
     new_board = copy.deepcopy(board)
 
     boards = predict_landing(figure_type, figure_point, new_board, agressive_mode)
@@ -104,12 +106,12 @@ def turn(gcb: Board) -> TetrisAction:
         for i in boards_to_remove:
             boards.pop(i)
     # обработка веса       
-    min_weight = boards[0][4]+boards[0][3]*2
+    min_weight = boards[0][4]+boards[0][3]
     min_weight_i = 0
     for i, boar in enumerate(boards):
-        if boar[4]+boar[3]*2 < min_weight:
+        if boar[4]+boar[3] < min_weight:
             min_weight_i = i
-            min_weight = boar[4]+boar[3]*2
+            min_weight = boar[4]+boar[3]
 
     action_numbers = boards[min_weight_i][0:2]
 
@@ -301,5 +303,5 @@ def main(uri: Text):
 if __name__ == "__main__":
     # в uri переменную необходимо поместить url с игрой для своего пользователя
     # put your game url in the 'uri' path 1-to-1 as you get in UI
-    uri = "http://codebattle2020.westeurope.cloudapp.azure.com/codenjoy-contest/board/player/aw4jqc1cry0tzt658hvm?code=1595073418621740968&gameName=tetris#"
+    uri = "http://codebattle2020.westeurope.cloudapp.azure.com/codenjoy-contest/board/player/43p5jg3i21mvgdrtig6u?code=8258462535161813492&gameName=tetris"
     main(uri)
